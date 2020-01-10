@@ -10,7 +10,8 @@ before we start, let me list what will be covered in the tutorial
 ### draw hello world
 
 ### draw circle
-### draw ellise
+### draw olymic logo
+### draw ellipse
 ### draw triangle
 ### draw square
 ### draw hexagon
