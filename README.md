@@ -223,6 +223,8 @@ col += drawD(210.,50.);
 }
 ```
 http://www.sumoon.com/glsl/sandbox_basic.html?id=5e18425c21460d006a7cc52e 你可以看到，直线部分比较清晰，但是斜线不够完美，留待后续解决。至少我们已经用GLSL实现了 HELLO WORLD. 这可能是我写过的最复杂的HELLO WORLD :(
+### 坐标映射
+前面的例子我们可以看到，在画斜线时，表现并不好。主要因为GPU分量的个数并不是跟物理像素一致的。也就是说，一个GPU分量可能包含多个物理像素。前面的程序我们都是根据gl_FragCoord去划线，在粒度上就达不到足够惊喜的程度。怎么办呢？ 我们需要映射一下。首先了解一下常数变量resolution. 顾名思义，它代表分辨率。
 
 
 ### draw circle
