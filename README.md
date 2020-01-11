@@ -14,8 +14,8 @@ void main(void)
 我们知道GPU都是并行计算，所以在进行浮点运算时比CPU要快很多。因为图像是经由GPU渲染后显示到屏幕上的，屏幕在物理上都是方形的像素阵列。GPU会把屏幕分成很多小块，然后并行渲染。在渲染之前，就会调用GLSL程序，进行最后的着色过程，此时我们可以思考下，为了GLSL能够更好地着色，至少需要哪些信息？
 
 ### GLSL globle variables
-gl_FragCoord：这个全局变量类型是vec4, 代表计算分量的坐标xyzw。因为GPU运算都是并行的，可以想象屏幕被分成很多小块，这个变量就用来代表每个块的坐标。
-gl_FragColor: 这个全局变量也是vec4,代表分块的颜色信息rgba.最后屏幕什么就看你如何控制这个变量了。
+-gl_FragCoord：这个全局变量类型是vec4, 代表计算分量的坐标xyzw。因为GPU运算都是并行的，可以想象屏幕被分成很多小块，这个变量就用来代表每个块的坐标。
+-gl_FragColor: 这个全局变量也是vec4,代表分块的颜色信息rgba.最后屏幕什么就看你如何控制这个变量了。
 ### draw white backgroud
 we start our tutorial with very simple one:draw white backgroud. you have known gl_FragColor can control color of your device. generally, RGB value ranges from 0 to 255. but in GLSL, RGB value ranges from 0.0 to 1.0 . actually, many of other values have same range. to draw white backgroud, simply, we set every fract white color,that is:RGB(1.0,1.0,1.0).
 ```
@@ -56,8 +56,174 @@ void main(void)
 http://www.sumoon.com/glsl/sandbox_basic.html?id=5e1976ad5620710077b857dd
 
 ### draw a line
-### draw a letter
-### draw hello world
+学会了上面的画点，画一条线就没那么难了，毕竟多个点可以组成线。 类似下面这样。
+```
+for(int i=0;i<10;i++)
+   drawdot(x+i, y);
+```
+这种方法可行，但是有一定的局限性。我们稍微扩展一下上面画点的思维，将点的长度，或者宽度延展一下，不就成了线吗？
+```
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+vec3 drawline(float x, float y, float xl, float yl)
+{
+	
+    xl = max(1., xl);
+    yl = max(1., yl);
+    float r=0.0;
+    if(gl_FragCoord.x <= (x+xl) && gl_FragCoord.x >= x && gl_FragCoord.y <= y && gl_FragCoord.y >= (y-yl) )
+        r=1.;    
+    return vec3(r);
+}
+void main(void) 
+{
+    vec3 col = drawline(150.,150.,100., 0.);
+    gl_FragColor = vec4(col, 1.);
+}
+```
+x,y代表线的起点，xl代表水平方向的长度，yl代表垂直方向的长度。 这样的参数设计可能并不理想，但是我们只是为了演示，问题不大。
+演示http://www.sumoon.com/glsl/sandbox_basic.html?id=5e182dd27d5774006ab8c627  
+这个函数可以画水平和垂直的线，但是斜线他就没办法了。那么如何画一条斜线呢？首先，需要知道起点和终点， 然后判断任一点是否在起点跟终点的连线上。
+这时，我们需要一点三角函数的知识，判断两点的斜率是否相同即可。
+```
+vec3 drawline(vec2 start, vec2 end)
+{   
+   float len = distance(start, end);
+   float r=0.0;
+   float yl = end.y-start.y;
+   float sinv = yl/len;
+   //check frag coord, it should be in the range of start,end;
+   if(gl_FragCoord.x >= min(start.x,end.x) && gl_FragCoord.x <= max(start.x, end.x) 
+      && gl_FragCoord.y >= min(start.y, end.y) && gl_FragCoord.y <= max(start.y, end.y))
+   {
+	   float slen = distance(start, gl_FragCoord.xy);
+	   float ssinv = (gl_FragCoord.y - start.y)/slen;
+	   if(abs(sinv-ssinv) <0.01)
+	   {
+		   r = 1.0;
+	   }
+   }
+   return vec3(r);
+}
+
+```
+你会可能会发现，斜线画的并不完美，主要是因为坐标精度问题。这一点后续一并解决。
+### draw letters(HELLO WORLD)
+来到这里，我们既可以画水平、垂直线段，也可以画斜线，我们就可以画字母了。 
+H可以用三条线段解决,O可以用方形表达。比较麻烦的是W，需要用斜线来画。
+```
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+vec3 drawline(float x, float y, float xl, float yl)
+{
+	
+    xl = max(1., xl);
+    yl = max(1., yl);
+    float r=0.0;
+    if(gl_FragCoord.x <= (x+xl) && gl_FragCoord.x >= x && gl_FragCoord.y <= y && gl_FragCoord.y >= (y-yl) )
+        r=1.;    
+    return vec3(r);
+}
+vec3 drawline(vec2 start, vec2 end)
+{   
+   float len = distance(start, end);
+   float r=0.0;
+   float yl = end.y-start.y;
+   float sinv = yl/len;
+   //check frag coord, it should be in the range of start,end;
+   if(gl_FragCoord.x >= min(start.x,end.x) && gl_FragCoord.x <= max(start.x, end.x) 
+      && gl_FragCoord.y >= min(start.y, end.y) && gl_FragCoord.y <= max(start.y, end.y))
+   {
+	   float slen = distance(start, gl_FragCoord.xy);
+	   float ssinv = (gl_FragCoord.y - start.y)/slen;
+	   if(abs(sinv-ssinv) <0.01)
+	   {
+		   r = 1.0;
+	   }
+   }
+   return vec3(r);
+}
+vec3 drawW(float x, float y)
+{
+	vec3 col = drawline(vec2(x,y+20.5), vec2(x+10., y));
+	col += drawline(vec2(x+10.,y), vec2(x+15., y+10.5));
+	col += drawline(vec2(x+15.,y+10.5), vec2(x+20., y));
+	col += drawline(vec2(x+20.,y), vec2(x+30., y+20.5));
+	return col;
+}
+vec3 drawH(float x, float y)
+{   
+    vec3 col = drawline(x,y+10.,10., 0.);
+    col += drawline(x,y+20.,0.,20.);
+    col += drawline(x+10.,y+20.,0.,20.);
+    return col;
+}
+vec3 drawR(float x, float y)
+{   
+    vec3 col = drawline(x,y+10.,10., 0.);
+    col += drawline(x,y+20.,0.,20.);
+    col += drawline(x+10.,y+20.,0.,10.);	
+    col += drawline(x,y+20.,10.,0.);
+    col += drawline(vec2(x+5.5,y+10.5), vec2(x+10.5, y));	
+    return col;
+}
+vec3 drawE(float x, float y)
+{   
+    vec3 col = drawline(x,y+10.,10., 0.);
+    col += drawline(x,y+20.,0.,20.);
+    col += drawline(x,y+20.,10.,0.);
+    col += drawline(x,y,10.,0.);
+	
+    return col;
+}
+vec3 drawL(float x, float y)
+{   
+    vec3 col = drawline(x,y,10., 0.);
+    col += drawline(x,y+20.,0.,20.);
+    
+    return col;
+}
+vec3 drawO(float x, float y)
+{   
+    vec3 col = drawline(x,y,10., 0.);
+    col += drawline(x,y+20.,0.,20.);
+    col += drawline(x+10.,y+20.,0.,20.);
+    col += drawline(x,y+20.,10., 0.);	
+    return col;
+}
+vec3 drawD(float x, float y)
+{   
+    vec3 col = drawline(x,y,5., 0.);
+    col += drawline(x,y+20.,0.,20.);
+    col += drawline(x+10.,y+15.,0.,10.);
+    col += drawline(x,y+20.,5., 0.);	
+    col += drawline(vec2(x+5.,y), vec2(x+10., y+5.));
+    col += drawline(vec2(x+5.,y+20.), vec2(x+10., y+15.));
+	return col;
+}
+void main(void) 
+{
+    vec3  col = drawH(50., 50.);
+    col += drawE(65.,50.);
+    col += drawL(80.,50.);
+    col += drawL(95.,50.);
+    col += drawO(110.,50.);
+	
+	
+    col += drawW(130.,50.);	
+col += drawO(165.,50.);
+col += drawR(180.,50.);	
+col += drawL(195.,50.);
+col += drawD(210.,50.);
+    gl_FragColor = vec4(col, 1.);
+}
+```
+http://www.sumoon.com/glsl/sandbox_basic.html?id=5e18425c21460d006a7cc52e 你可以看到，直线部分比较清晰，但是斜线不够完美，留待后续解决。至少我们已经用GLSL实现了 HELLO WORLD. 这可能是我写过的最复杂的HELLO WORLD :(
+
 
 ### draw circle
 ### draw olymic logo
