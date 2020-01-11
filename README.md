@@ -17,6 +17,7 @@ void main(void)
     gl_FragColor = vec4(vec3(1.), 1.);
 }
 ```
+demo http://www.sumoon.com/glsl/sandbox_basic.html?id=5e1981de43c257006fe4abf0
 ### draw a dot
 we start our tutorial with very simple one: draw a white dot on specified position.
 ```
