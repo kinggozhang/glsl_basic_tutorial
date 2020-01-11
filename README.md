@@ -224,8 +224,22 @@ col += drawD(210.,50.);
 ```
 http://www.sumoon.com/glsl/sandbox_basic.html?id=5e18425c21460d006a7cc52e 你可以看到，直线部分比较清晰，但是斜线不够完美，留待后续解决。至少我们已经用GLSL实现了 HELLO WORLD. 这可能是我写过的最复杂的HELLO WORLD :(
 ### 坐标映射
-前面的例子我们可以看到，在画斜线时，表现并不好。主要因为GPU分量的个数并不是跟物理像素一致的。也就是说，一个GPU分量可能包含多个物理像素。前面的程序我们都是根据gl_FragCoord去划线，在粒度上就达不到足够惊喜的程度。怎么办呢？ 我们需要映射一下。首先了解一下常数变量resolution. 顾名思义，它代表分辨率。
+前面的例子我们可以看到，gl_FragCoord的坐标值跟屏幕分辨率相关。以我机器为例，1920*1080分辨率下，gl_FragCoord.x最大值为620左右。因为该值决定了GPU分量的个数，我想应该与显卡性能有关。未经证实。 如果我们的程序都是基于gl_FragCoord，  有时候在不同分辨率下，现实效果就不一样了。因此我们需要一个相对坐标。就是将gl_FragCoord映射到0~1之间的浮点数值。这样跟gl_FragColor就更搭配，渐渐你会发现这样做的好处。先介绍一个常量：uniform vec2 resolution;这就是你的GL上下文的分辨率。
 
+```
+uniform vec2 resolution;
+void main() {
+    vec2 st = gl_FragCoord.xy/resolution;
+    vec3 col;        	
+    if(st.x> .5)
+       col = vec3(1.,0.,0.);
+    if(gl_FragCoord.x > 600.)
+           col += vec3(0.,1.,0.); 
+      
+    gl_FragColor = vec4(col,1.);
+}
+```
+ 你会发现，无论分辨率如何变。 st.x都是在0到1之间变化。而gl_FragCoord.x却会随着分辨率的变化而变化。 自己去试试看吧。http://www.sumoon.com/glsl/sandbox_basic.html?id=5e19d8ac21b47e007027854a
 
 ### draw circle
 ### draw olymic logo
