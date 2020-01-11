@@ -6,7 +6,17 @@ before we start, let me list what will be covered in the tutorial
 gl_FragCoord：这是一个全局变量，类型是vec4, 代表计算分量的坐标xyzw。因为GPU运算都是并行的，可以想象屏幕被分成很多小块，这个变量就用来代表每个块的坐标。
 gl_FragColor: 这个全局变量也是vec4,代表分块的颜色信息rgba.最后屏幕什么就看你如何控制这个变量了。
 ### draw white backgroud
-we start our tutorial with very simple one:draw white backgroud. you have known gl_FragColor can control color of your device. generally, RGB value ranges from 0 to 255. but in GLSL, RGB value ranges from 0.0 to 1.0 . actually, many of other values have same range. 
+we start our tutorial with very simple one:draw white backgroud. you have known gl_FragColor can control color of your device. generally, RGB value ranges from 0 to 255. but in GLSL, RGB value ranges from 0.0 to 1.0 . actually, many of other values have same range. to draw white backgroud, simply, we set every fract white color,that is:RGB(1.0,1.0,1.0).
+```
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+void main(void) 
+{
+    gl_FragColor = vec4(vec3(1.), 1.);
+}
+```
 ### draw a dot
 we start our tutorial with very simple one: draw a white dot on specified position.
 ```
